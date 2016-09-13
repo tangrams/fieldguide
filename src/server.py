@@ -30,7 +30,7 @@ VALHALLA_SERVER = 'http://valhalla.mapzen.com'
 
 SERVER = "localhost"
 SERVER_PORT = 8010
-ZOOM = 18
+ZOOM = 18.5
 KINDLE_WIDTH = 758
 KINDLE_HEIGHT = 1024
 TMP_FOLDER = "tmp"
@@ -109,7 +109,7 @@ class RouteHandler(tornado.web.RequestHandler):
             pdf.add_page()
             pdf.image(img_path,0,0)
             # pdf.rect(0, KINDLE_HEIGHT-20, KINDLE_WIDTH, 20, 'F')
-            pdf.text(20, KINDLE_HEIGHT-4, instructions[step])
+            pdf.text(10, KINDLE_HEIGHT-14, instructions[step])
             step = step + 1
 
             # Clean image
@@ -133,6 +133,7 @@ def make_app():
     return tornado.web.Application([
         (r"\/[\w|\d]+\.json", JSONHandler),
         (r"/route.*", RouteHandler),
+        (r"/*", WebServer),
     ])
 
 if __name__ == "__main__":
