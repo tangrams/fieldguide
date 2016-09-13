@@ -24,19 +24,20 @@ layers:
                 lines:
                     color: white
                     order: 300000
-                    width: 10px
+                    width: 25px
+                    cap: round
                 ants:
                     color: black
                     order: 300001
-                    width: 5px
+                    width: 15px
         stops:
             filter: { $geometry: point }
             draw:
                 points:
                     color: black
                     order: 30002
-                    size: 10
-                    style: stops
+                    size: 25px
+                    style: point_dot
 styles:
     dots:
         mix: [space-tile, tiling-tile, shapes-circle]
@@ -93,21 +94,17 @@ styles:
                     }
                     position.z *= ((1. - min) / (1. + (exp(e)))) + min;
                     
-    stops:
+    point_dot:
         base: points
         texcoord: true
         blend: overlay
         shaders:
-            defines:
-                SHAPE_SIDES: 3
-                SHAPE_SIZE: 1.
-                SHAPE_BORDER_WIDTH: 0.15
-                SHAPE_BORDER_COLOR: vec3(1.)
-                SHAPE_ALPHA: 1.
             blocks:
                 color: |
-                    vec2 st = v_texcoord-.5;
+                    vec2 st = v_texcoords.xy-.5;
                     float r = dot(st,st)*2.;
+                    color = vec4(0.);
+                    color.a = step(.1, 1.-r);
                     color.rgb += step(.1, r);
                     color.rgb += step(.5, r)-step(.2, r);
     """
