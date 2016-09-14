@@ -26,7 +26,7 @@ case "$1" in
 
                 sudo apt-get update
                 sudo apt-get upgrade
-                sudo apt-get install build-essential python-setuptools python-dev python-pip
+                sudo apt-get install build-essential python-setuptools python-dev python-pip python-imaging
 
             fi
         fi
@@ -36,7 +36,7 @@ case "$1" in
             mkdir tmp
         fi
 
-        pip install fpdf tornado
+        pip install fpdf tornado futures geojson
         ;;
 
     start)
