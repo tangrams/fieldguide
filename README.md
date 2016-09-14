@@ -10,8 +10,6 @@ Given a Valhalla route request construct a PDF using [Paparazzi's static maps](h
 
 You need to install [Tangram Paparazzi](https://github.com/tangrams/paparazzi) server in an [Amazon G2 GPU server](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using_cluster_computing.html). Paparazzi is a headless version of [Tangram-es](https://github.com/tangrams/tangram-es), to make static maps on the cloud. In that repository you kind find more details about the installation.
 
-Then you need to modify `PAPARAZZI_SERVER` on `src/server.py` to point to the URL address of the paparazzi server.
-
 ### Install FieldGuide
 
 Clone the repository and run the install script:
@@ -22,10 +20,16 @@ cd fieldguide
 ./fieldguide.sh install
 ```
 
-and then FieldPapers:
+Run FieldPapers pointing to the Paparazzi on `http://localhost:8080`:
 
 ```bash
-./fieldguide.sh start
+./fieldguide.sh start 
+```
+
+Or run FieldPapers pointing to a specific Paparazzi server:
+
+```bash
+./fieldguide.sh start http://paparazzi.server.somewhere.in.the.cloud:8080/
 ```
 
 ## Thanks to

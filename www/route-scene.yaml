@@ -1,25 +1,26 @@
-import: https://tangrams.github.io/refill-style/refill-style.yaml
+import: 
+    - https://tangrams.github.io/refill-style/refill-style.yaml
 
 styles:
-  ants:
-    base: lines
-    blend: overlay
-    texcoords: true
-    animated: true
-    shaders:
-      blocks:
-        color: |
-          color.a = step(.5,fract(u_time-v_texcoord.y*.5));
+    ants:
+        base: lines
+        blend: overlay
+        texcoords: true
+        animated: true
+        shaders:
+            blocks:
+                color: |
+                color.a = step(.5,fract(u_time-v_texcoord.y*.5));
 
 layers:
-  routelayer:
-    data: { source: routes }
-    draw:
-      lines:
-        color: '#f66'
-        order: 300000
-        width: 10px
-      ants:
-        color: [.0,.36,.6]
-        order: 300000
-        width: 5px
+    routelayer:
+        data: { source: routes }
+        draw:
+            lines:
+                color: '#f66'
+                order: 300000
+                width: 10px
+            ants:
+                color: [.0,.36,.6]
+                order: 300000
+                width: 5px

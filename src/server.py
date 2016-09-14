@@ -20,28 +20,54 @@ import geojson
 import json
 import md5
 import requests
+import socket
 
 MAX_WORKERS = 16
 
-# PAPARAZZI_SERVER = "static-maps.dev.mapzen.com"
-# PAPARAZZI_SERVER = "52.90.135.245"
 PAPARAZZI_SERVER = "http://localhost:8080"
 VALHALLA_SERVER = 'http://valhalla.mapzen.com'
 
-SERVER = "localhost"
-SERVER_PORT = 8010
+SERVER = [l for l in ([ip for ip in socket.gethostbyname_ex(socket.gethostname())[2] if not ip.startswith("127.")][:1], [[(s.connect(('8.8.8.8', 53)), s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]]) if l][0][0]
 ZOOM = 18.5
 KINDLE_WIDTH = 758
 KINDLE_HEIGHT = 1024
 TMP_FOLDER = "tmp"
+WWW_FOLDER = "www"
+
+# Server GeoJSONs
+class WebServer(tornado.web.RequestHandler):
+    @gen.coroutine
+    def get(self):
+        if self.request.path is '/':
+            self.request.path = '/index.html'
+
+        if os.path.isfile(WWW_FOLDER+self.request.path):
+            file_name, file_ext = os.path.splitext(self.request.path)
+           
+            mime_header = 'text/html'
+            if file_ext == '.css':
+                mime_header = 'text/css'
+            elif file_ext == '.yaml':
+                mime_header = 'text/vnd.yaml'
+            elif file_ext == '.js':
+                mime_header = 'application/javascript'
+            elif file_ext == '.svg':
+                mime_header = 'image/svg+xml'
+
+            # print 'Sending', file_name, file_ext, 'as', mime_header
+
+            f = open(WWW_FOLDER+self.request.path)
+            self.set_header('Content-type', mime_header)
+            self.write(f.read())
+            f.close()   
 
 # Server GeoJSONs
 class JSONHandler(tornado.web.RequestHandler):
     @gen.coroutine
     def get(self):
-        if os.path.isfile("tmp"+self.request.path):
-            print "Opening " + "tmp"+self.request.path
-            f = open("tmp"+self.request.path) 
+        if os.path.isfile(TMP_FOLDER+self.request.path):
+            print "Opening " + TMP_FOLDER+self.request.path
+            f = open(TMP_FOLDER+self.request.path) 
             self.set_header('Content-type', 'application/json')
             self.write(f.read())
             f.close()            
@@ -52,21 +78,20 @@ class RouteHandler(tornado.web.RequestHandler):
 
     @run_on_executor
     def make_guide(self):
-        print "SEARCHING ROUTE"
         # CHECK THIS
-        print VALHALLA_SERVER+"/route?json="+self.get_arguments("json")[0]+"&api_key=valhalla-EzqiWWY"
-        RST = requests.get(VALHALLA_SERVER+"/route?json="+self.get_arguments("json")[0]+"&api_key=valhalla-EzqiWWY")
+        print  "New ROUTE", VALHALLA_SERVER+"/route?json="+self.get_arguments("json")[0]+"&api_key="+self.get_arguments("api_key")[0]
+        RST = requests.get(VALHALLA_SERVER+"/route?json="+self.get_arguments("json")[0]+"&api_key="+self.get_arguments("api_key")[0])
 
         name = md5.new(RST.text).hexdigest()
 
         pdf_name = TMP_FOLDER+'/'+name+'.pdf'
         if os.path.isfile("tmp/"+name+".pdf"):
             with open(pdf_name, 'rb') as f:
-                print "Serving cached PDF: " + pdf_name
+                print "Serving CACHED PDF: " + pdf_name
                 return f.read()
 
+        print "Constructing NEW PDF"
 
-        print "Constructing PDF: "
         # Make a GeoJSON file with valhala response
         geojson_name = name+'.json'
         JSON = json.loads(RST.text)
@@ -82,7 +107,7 @@ class RouteHandler(tornado.web.RequestHandler):
         file.close()
 
         # Emebed the link into a YAML scene file
-        scene = getScene('http://' + SERVER + ':' + str(SERVER_PORT) + '/' + geojson_name);
+        scene = getScene('http://' + SERVER + '/' + geojson_name);
 
         # Start a PDF
         pdf = FPDF(unit = 'pt', format = [KINDLE_WIDTH, KINDLE_HEIGHT])
@@ -129,20 +154,20 @@ class RouteHandler(tornado.web.RequestHandler):
         self.write(res)
 
 def make_app():
-    print 'Starting httpd...'
+    print 'Pointing Paparazzi server at:', PAPARAZZI_SERVER
+    print 'Starting HTTP Server at:', 'http://'+SERVER
     return tornado.web.Application([
         (r"\/[\w|\d]+\.json", JSONHandler),
         (r"/route.*", RouteHandler),
-        (r"/*", WebServer),
+        (r"/.*", WebServer),
     ])
 
 if __name__ == "__main__":
     from sys import argv
 
     if len(argv) == 2:
-        SERVER_PORT = int(argv[1])
+        PAPARAZZI_SERVER = argv[1]
 
     app = make_app()
-    app.listen(SERVER_PORT)
+    app.listen(80)
     IOLoop.instance().start()
-    # tornado.ioloop.IOLoop.current().start()

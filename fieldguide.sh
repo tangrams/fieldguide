@@ -8,7 +8,21 @@ case "$1" in
 
         pip install fpdf tornado
         ;;
+
     start)
-        python src/server.py 
+        sudo python src/server.py $2
+        ;;
+
+    stop)
+        sudo kill -9 `pgrep -f src/server.py`
+        ;;
+
+    *)
+        if [ ! -e /usr/local/bin/paparazzi_worker ]; then
+            echo "Usage: $0 install"
+        else
+            echo "Usage: $0 start"
+        fi
+        exit 1
         ;;
 esac

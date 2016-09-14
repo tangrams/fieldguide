@@ -1,5 +1,4 @@
 (function (window, undefined) {
-
   var loc = window.location;
   var history = window.history;
   var hash;
@@ -13,7 +12,6 @@
 
     this.set = function (dataObj) {
       var hashString = formatter.formatToHash(dataObj);
-      console.log(hashString);
       history.replaceState({}, null, '#'+hashString);
     },
     this.read = function () {
