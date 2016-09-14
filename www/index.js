@@ -18,35 +18,38 @@ var routingData = {
 
 // read searchquery and set up hash if there is none
 // you can ignore this part if you are not planning to setup search query for your page
-var hashVal = hashControl.read()
-if (hashVal !== null) {
-    var wps = [];
-    for(var key in hashVal) {
-        if(key.startsWith('point')) {
-            var idx = parseInt(key.charAt(5));
-            var kind = key.slice(6,9);
-            if(wps[idx] === undefined) 
-                wps[idx] = L.latLng(0,0);
-            wps[idx][kind] = hashVal[key];
+window.updateData = function () {
+    var hashVal = hashControl.read()
+    if (hashVal !== null) {
+        var wps = [];
+        for(var key in hashVal) {
+            if(key.startsWith('point')) {
+                var idx = parseInt(key.charAt(5));
+                var kind = key.slice(6,9);
+                if(wps[idx] === undefined) 
+                    wps[idx] = L.latLng(0,0);
+                wps[idx][kind] = hashVal[key];
+            }
         }
+
+        var mode = hashVal.mode;
+
+        routingData.waypoints = wps;
+        routingData.costing = mode;
+
+    } 
+    else {
+        // when there was no hash set yet
+        hashControl.set({
+            point0lat: routingData.waypoints[0].lat,
+            point0lng: routingData.waypoints[0].lng,
+            point1lat: routingData.waypoints[1].lat,
+            point1lng: routingData.waypoints[1].lng,
+            mode: routingData.costing
+        })
     }
-
-    var mode = hashVal.mode;
-
-    routingData.waypoints = wps;
-    routingData.costing = mode;
-
-} 
-else {
-    // when there was no hash set yet
-    hashControl.set({
-        point0lat: routingData.waypoints[0].lat,
-        point0lng: routingData.waypoints[0].lng,
-        point1lat: routingData.waypoints[1].lat,
-        point1lng: routingData.waypoints[1].lng,
-        mode: routingData.costing
-    })
 }
+window.updateData();
 
 var control = L.Routing.control({
     routeLine: function (route, options) { return L.Routing.mapzenLine(route, options); },
@@ -89,10 +92,11 @@ function isNumber(string) {
 }
 
 L.easyButton('btn-download', function(btn, map) {
+    window.updateData();
+
     var url = window.location.origin + '/route?json={"locations":';
     var points = []
     for (var point of routingData.waypoints){
-        console.log(point);
         points.push({lat:parseFloat(point.lat),lon:parseFloat(point.lng),type:'break'})
     }
     url += JSON.stringify(points);
